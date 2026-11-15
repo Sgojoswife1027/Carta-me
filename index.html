@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carta Interactiva Elegante</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Lora (cuerpo) y Caveat (firma amigable) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Textura de papel blanco artesanal para el fondo */
+        body {
+            background-color: #f6f6f4;
+            background-image: 
+                radial-gradient(rgba(0,0,0,0.03) 1px, transparent 0),
+                radial-gradient(rgba(0,0,0,0.02) 1px, transparent 0);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Colores y sombras del sobre */
+        :root {
+            --navy-base: #0a2240;
+            --navy-dark: #06162b;
+            --navy-flap: #0d2b52;
+            --navy-pocket-left: #091f3b;
+            --navy-pocket-right: #081c36;
+            --navy-pocket-bottom: #0b2547;
+            /* NUEVO COLOR DE LA CARTA: Azul cielo pastel */
+            --card-sky-pastel: #e0f2fe; 
+        }
+
+        .scene {
+            perspective: 1400px;
+        }
+
+        .envelope-wrapper {
+            position: relative;
+            width: 340px;
+            height: 230px;
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+        }
+
+        @media (min-width: 640px) {
+            .envelope-wrapper {
+                width: 440px;
+                height: 295px;
+            }
+        }
+
+        .envelope-shadow {
+            position: absolute;
+            bottom: -14px;
+            left: 5%;
+            width: 90%;
+            height: 24px;
+            background: radial-gradient(ellipse at center, rgba(6, 22, 43, 0.35) 0%, rgba(6, 22, 43, 0) 75%);
+            filter: blur(6px);
+            transition: all 0.8s ease;
+            z-index: 0;
+        }
+
+        .envelope-back {
+            position: absolute;
+            inset: 0;
+            background-color: var(--navy-dark);
+            border-radius: 4px;
+            box-shadow: 0 12px 30px -5px rgba(6, 22, 43, 0.3);
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .texture-overlay {
+            position: absolute;
+            inset: 0;
+            opacity: 0.18;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            pointer-events: none;
+        }
+
+        /* Tarjeta interior con nuevo color */
+        .letter-card {
+            position: absolute;
+            left: 6%;
+            width: 88%;
+            height: 88%;
+            bottom: 6%;
+            background-color: var(--card-sky-pastel);
+            border-radius: 3px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+            z-index: 2;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: 
+                transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+                height 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.8s ease;
+            transform-origin: bottom center;
+            overflow: hidden;
+            border: 1px solid rgba(10, 34, 64, 0.08); /* Borde un poco más marcado para el azul */
+        }
+
+        @media (min-width: 640px) {
+            .letter-card {
+                padding: 28px 34px;
+            }
+        }
+
+        .font-serif-elegant {
+            font-family: 'Lora', serif;
+        }
+        .font-script {
+            font-family: 'Caveat', cursive;
+        }
+
+        .envelope-front {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            border-radius: 0 0 4px 4px;
+            overflow: hidden;
+        }
+
+        .pocket-left {
+            position: absolute;
+            inset: 0;
+            background-color: var(--navy-pocket-left);
+            clip-path: polygon(0 0, 42% 54%, 0 100%);
+        }
+
+        .pocket-right {
+            position: absolute;
+            inset: 0;
+            background-color: var(--navy-pocket-right);
+            clip-path: polygon(100% 0, 58% 54%, 100% 100%);
+        }
+
+        .pocket-bottom {
+            position: absolute;
+            inset: 0;
+            background-color: var(--navy-pocket-bottom);
+            clip-path: polygon(0 100%, 38% 51%, 62% 51%, 100% 100%);
+            filter: drop-shadow(0 -3px 4px rgba(0, 0, 0, 0.25));
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 62%;
+            background-color: var(--navy-flap);
+            clip-path: polygon(0 0, 100% 0, 52% 96%, 50% 98%, 48% 96%);
+            transform-origin: top center;
+            transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.2s linear 0.35s;
+            z-index: 4;
+            filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.35));
+        }
+
+        .wax-hint {
+            position: absolute;
+            top: 52%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid rgba(224, 242, 254, 0.3); /* Brillo azulado */
+            background: radial-gradient(circle at 30% 30%, #143b6e, #071930);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            z-index: 5;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ================= ESTADOS DE ANIMACIÓN ================= */
+
+        .envelope-wrapper.is-open .envelope-flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), z-index 0.1s linear 0.3s;
+        }
+
+        .envelope-wrapper.is-open .wax-hint {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5);
+            pointer-events: none;
+        }
+
+        .envelope-wrapper.is-open .letter-card {
+            transform: translateY(-42%);
+            transition-delay: 0.35s;
+        }
+
+        .envelope-wrapper.card-expanded {
+            transform: translateY(135px);
+        }
+
+        @media (min-width: 640px) {
+            .envelope-wrapper.card-expanded {
+                transform: translateY(155px);
+            }
+        }
+
+        .envelope-wrapper.card-expanded .letter-card {
+            z-index: 10;
+            transform: translateY(-195px) scale(1.06);
+            height: 330px;
+            box-shadow: 0 20px 45px rgba(6, 22, 43, 0.25), 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: 
+                transform 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+                height 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+                z-index 0s linear 0.35s,
+                box-shadow 0.8s ease;
+        }
+
+        @media (min-width: 640px) {
+            .envelope-wrapper.card-expanded .letter-card {
+                transform: translateY(-230px) scale(1.08);
+                height: 390px;
+            }
+        }
+
+        .card-content {
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.5s ease 0.45s, transform 0.5s ease 0.45s;
+        }
+
+        .envelope-wrapper.card-expanded .card-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-4px); }
+        }
+        .animate-float {
+            animation: floatSlow 3s ease-in-out infinite;
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(10, 34, 64, 0.15);
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 relative">
+
+    <!-- Área central interactiva: Sobre + Tarjeta -->
+    <main id="stage" class="flex-1 w-full flex flex-col items-center justify-center scene my-auto py-12 cursor-pointer">
+        
+        <div id="envelope" class="envelope-wrapper" role="button" tabindex="0" aria-label="Toca para abrir o cerrar el sobre">
+            <div class="envelope-shadow"></div>
+
+            <div class="envelope-back">
+                <div class="texture-overlay"></div>
+            </div>
+
+            <article class="letter-card" id="letter-card">
+                <div class="texture-overlay opacity-10"></div>
+                
+                <div class="card-content relative z-10 h-full flex flex-col justify-between border border-[#0a2240]/10 rounded-sm p-3 sm:p-5">
+                    
+                    <div>
+                        <div class="flex justify-between items-center border-b border-[#0a2240]/10 pb-2 mb-3">
+                            <span class="text-[11px] sm:text-xs tracking-widest uppercase text-[#0a2240]/60 font-serif-elegant">
+                                Para Dani: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                                "http://www.w3.org/TR/html4/loose.dtd">
+                            </span>
+                            <span class="text-[#0a2240]/40 text-xs"></span>
+                        </div>
+                        <h2 class="font-serif-elegant text-xl sm:text-2xl font-semibold text-[#0a2240] tracking-tight">
+                            14-11-26
+                        </h2>
+                    </div>
+
+                    <div class="my-auto py-2 overflow-y-auto custom-scroll max-h-[160px] sm:max-h-[200px]">
+                        <p class="font-serif-elegant text-base sm:text-lg leading-relaxed text-slate-700 whitespace-pre-line"> Te quiero <3 
+                        </p>
+                    </div>
+
+                    <div class="pt-2 border-t border-[#0a2240]/10 flex justify-end items-end">
+                        <div class="text-right">
+                            <p class="text-[11px] uppercase tracking-widest text-[#0a2240]/60 font-serif-elegant mb-0.5">Con cariño,</p>
+                            <p class="font-script text-2xl sm:text-3xl text-[#0a2240] pr-1">
+                               Yo
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <div class="envelope-front">
+                <div class="pocket-left">
+                    <div class="texture-overlay"></div>
+                </div>
+                <div class="pocket-right">
+                    <div class="texture-overlay"></div>
+                </div>
+                <div class="pocket-bottom">
+                    <div class="texture-overlay"></div>
+                </div>
+            </div>
+
+            <div class="envelope-flap">
+                <div class="texture-overlay"></div>
+            </div>
+
+            <div class="wax-hint">
+                <div class="w-1.5 h-1.5 rounded-full bg-[#e0f2fe]/60"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Indicador inferior de interacción -->
+    <footer class="w-full text-center pb-3 z-20 pointer-events-none">
+        <p id="hint-text" class="text-xs sm:text-sm text-slate-500 font-light tracking-wide animate-float transition-opacity duration-300">
+            Toca la pantalla para abrir el sobre
+        </p>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const stage = document.getElementById('stage');
+            const envelope = document.getElementById('envelope');
+            const hintText = document.getElementById('hint-text');
+
+            // Estado de la animación: 'closed' | 'animating' | 'open'
+            let state = 'closed';
+            let timers = [];
+
+            function clearTimers() {
+                timers.forEach(t => clearTimeout(t));
+                timers = [];
+            }
+
+            function openEnvelope() {
+                if (state !== 'closed') return;
+                state = 'animating';
+                clearTimers();
+
+                envelope.classList.add('is-open');
+                hintText.textContent = 'Abriendo...';
+
+                const t1 = setTimeout(() => {
+                    envelope.classList.add('card-expanded');
+                    state = 'open';
+                    hintText.textContent = 'Toca de nuevo para guardar la carta';
+                }, 650);
+
+                timers.push(t1);
+            }
+
+            function closeEnvelope() {
+                if (state !== 'open') return;
+                state = 'animating';
+                clearTimers();
+
+                envelope.classList.remove('card-expanded');
+                hintText.textContent = 'Guardando...';
+
+                const t1 = setTimeout(() => {
+                    envelope.classList.remove('is-open');
+                }, 450);
+
+                const t2 = setTimeout(() => {
+                    state = 'closed';
+                    hintText.textContent = 'Toca la pantalla para abrir el sobre';
+                }, 1100);
+
+                timers.push(t1, t2);
+            }
+
+            // Al hacer clic en cualquier parte del escenario, alterna entre abrir y cerrar
+            stage.addEventListener('click', () => {
+                if (state === 'closed') {
+                    openEnvelope();
+                } else if (state === 'open') {
+                    closeEnvelope();
+                }
+            });
+
+            // Accesibilidad con teclado
+            envelope.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (state === 'closed') openEnvelope();
+                    else if (state === 'open') closeEnvelope();
+                }
+            });
+        });
+    </script>
+</body>
+  </html>
